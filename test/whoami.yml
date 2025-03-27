@@ -3,7 +3,6 @@
   become: true
   become_user: root
   become_method: ansible.builtin.sudo
-  become_flags: '-'
 
   tasks:
     - name: Check user with shell module
