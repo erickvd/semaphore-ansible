@@ -1,6 +1,5 @@
 ---
 - hosts: "{{ HOSTS | default([]) }}"
-  remote_user: eric
   become: true
   become_user: root
   become_method: ansible.builtin.su
