@@ -1,0 +1,19 @@
+---
+- hosts: "{{ HOSTS }} | default([])"
+  become: true
+  become_user: root
+  become_method: ansible.builtin.su
+  become_flags: '-'
+
+  tasks:
+    - name: Check user with shell module
+      ansible.builtin.shell: whoami
+      register: r
+    - name: Debug
+      ansible.builtin.debug: var=r
+    - name: Check user with command module
+      ansible.builtin.command: whoami
+      register: r2
+    - name: Debug 2
+      ansible.builtin.debug: var=r2
+...
