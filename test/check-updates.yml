@@ -9,7 +9,7 @@
 
     - name: Check for upgrades
       apt:
-        upgrade: none
+        upgrade: safe
       register: upgrade_check
       check_mode: yes
       changed_when: false
