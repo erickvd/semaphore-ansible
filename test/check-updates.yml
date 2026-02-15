@@ -1,5 +1,5 @@
 - name: Check for available updates on Debian-based systems
-  hosts: all
+  hosts: "{{ HOSTS | default([]) }}"
   become: yes
   tasks:
     - name: Update package cache
