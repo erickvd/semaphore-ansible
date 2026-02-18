@@ -11,6 +11,6 @@
 
     - name: Copier les scripts de déploiement
       ansible.builtin.copy:
-        src: "files/scripts_root/"
+        src: "../files/scripts_root/"
         dest: "/root/scripts/"
         mode: '0755'
