@@ -1,0 +1,16 @@
+---
+- name: Deploiement de scripts
+  hosts: "{{ HOSTS | default([]) }}"
+  become: true
+  tasks:
+    - name: Ensure script directory exist
+      ansible.builtin.file:
+        path: /root/scripts
+        state: directory
+        mode: '0755'
+
+    - name: Copier les scripts de déploiement
+      ansible.builtin.copy:
+        src: "files/scripts_root/"
+        dest: "/root/scripts/"
+        mode: '0755'

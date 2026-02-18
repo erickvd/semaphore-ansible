@@ -1,25 +1,25 @@
 - name: Check for available updates on Debian-based systems
   hosts: "{{ HOSTS | default([]) }}"
-  become: yes
+  become: true
   tasks:
     - name: Update package cache
-      apt:
-        update_cache: yes
+      ansible.builtin.apt:
+        update_cache: true
       changed_when: false
 
     - name: Check for upgrades
-      apt:
+      ansible.builtin.apt:
         upgrade: safe
       register: upgrade_check
-      check_mode: yes
+      check_mode: true
       changed_when: false
 
     - name: List available updates
-      shell: apt list --upgradable 2>/dev/null
+      ansible.builtin.shell: apt list --upgradable 2>/dev/null
       register: upgradable_packages
       changed_when: false
 
     - name: Display upgradable packages
-      debug:
+      ansible.builtin.debug:
         msg: "{{ upgradable_packages.stdout_lines }}"
       when: "'upgradable' in upgradable_packages.stdout"
