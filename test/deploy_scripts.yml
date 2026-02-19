@@ -25,6 +25,9 @@
     - name: Configuration des taches de maintenance pour les serveurs Ubuntu
       when: "'ubuntu_servers' in group_names"
       block:
+        - name: 'Information'
+          ansible.builtin.debug:
+            msg: "Cible: ubuntu_servers"
         - name: "Cron : Check updates chaque samedi à 10h"
           ansible.builtin.cron:
             name: "Check updates weekly"
@@ -38,6 +41,9 @@
     - name: Configuration des tâches de maintenance pour les desktops Ubuntu
       when: "'ubuntu_desktops' in group_names"
       block:
+        - name: 'Information'
+          ansible.builtin.debug:
+            msg: "Cible: ubuntu_desktops"
         - name: "Systemd : Création du service"
           ansible.builtin.copy:
             dest: /etc/systemd/system/check-updates.service
