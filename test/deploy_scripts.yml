@@ -2,77 +2,91 @@
 - name: Deploiement de scripts
   hosts: "{{ HOSTS | default([]) }}"
   become: true
+  gather_facts: false
   tasks:
     - name: Vérifier si les cibles sont UP
       ansible.builtin.ping:
-    - name: Ensure script directory exist
-      ansible.builtin.file:
-        path: /root/scripts
-        state: directory
-        mode: '0700'
+      ignore_unreachable: true
+      register: ping_results
 
-    - name: Copier les scripts de déploiement
-      ansible.builtin.copy:
-        src: "scripts_root/"
-        dest: "/root/scripts/"
-        mode: '0700'
+    # Si la machine est injoignable, on affiche un Warning
+    - name: "Alerte : Machine hors-ligne"
+      ansible.builtin.debug:
+        msg: "⚠️ ATTENTION : L'hôte {{ inventory_hostname }} est injoignable. Passage à la suite."
+      when: ping_results.unreachable is defined and ping_results.unreachable
 
-    - name: Générer le fichier .env à partir du template
-      ansible.builtin.template:
-        src: env.j2         # Ansible cherche tout seul dans le dossier /templates
-        dest: /root/scripts/.env
-        mode: '0600'
-
-    # --- CONFIGURATION SERVEURS ---
-    - name: Configuration des taches de maintenance pour les serveurs Ubuntu
-      when: "'ubuntu_servers' in group_names"
+    - name: Ignorer les machines injoignables
+      when: ping_results.ping is defined
       block:
-        - name: "(ubuntu_servers) Cron : Check updates chaque samedi à 10h"
-          ansible.builtin.cron:
-            name: "Check updates weekly"
-            minute: "0"
-            hour: "10"
-            weekday: "6"
-            user: root
-            job: "/root/scripts/check-updates.sh"
+        - name: Ensure script directory exist
+          ansible.builtin.file:
+            path: /root/scripts
+            state: directory
+            mode: '0700'
 
-    # --- CONFIGURATION DESKTOPS ---
-    - name: Configuration des tâches de maintenance pour les desktops Ubuntu
-      when: "'ubuntu_desktops' in group_names"
-      block:
-        - name: "(ubuntu_desktops) Systemd : Création du service"
+        - name: Copier les scripts de déploiement
           ansible.builtin.copy:
-            dest: /etc/systemd/system/check-updates.service
-            owner: root
-            group: root
-            mode: '0644'
-            content: |
-              [Unit]
-              Description=Vérification des mises à jour (Mode Desktop)
-              [Service]
-              Type=oneshot
-              ExecStart=/root/scripts/check-updates.sh
+            src: "scripts_root/"
+            dest: "/root/scripts/"
+            mode: '0700'
 
-        - name: "(ubuntu_desktops) Systemd : Création du timer (10min boot + hebdomadaire)"
-          ansible.builtin.copy:
-            dest: /etc/systemd/system/check-updates.timer
-            owner: root
-            group: root
-            mode: '0644'
-            content: |
-              [Unit]
-              Description=Lance le script 10min après boot et 1x par semaine
-              [Timer]
-              OnBootSec=10min
-              OnUnitActiveSec=1w
-              Persistent=true
-              [Install]
-              WantedBy=timers.target
-          register: timer_config
+        - name: Générer le fichier .env à partir du template
+          ansible.builtin.template:
+            src: env.j2         # Ansible cherche tout seul dans le dossier /templates
+            dest: /root/scripts/.env
+            mode: '0600'
 
-        - name: "(ubuntu_desktops) Systemd : Activation et démarrage du timer"
-          ansible.builtin.systemd:
-            name: check-updates.timer
-            state: started
-            enabled: true
-            daemon_reload: "{{ timer_config.changed }}"
+        # --- CONFIGURATION SERVEURS ---
+        - name: Configuration des taches de maintenance pour les serveurs Ubuntu
+          when: "'ubuntu_servers' in group_names"
+          block:
+            - name: "(ubuntu_servers) Cron : Check updates chaque samedi à 10h"
+              ansible.builtin.cron:
+                name: "Check updates weekly"
+                minute: "0"
+                hour: "10"
+                weekday: "6"
+                user: root
+                job: "/root/scripts/check-updates.sh"
+
+            # --- CONFIGURATION DESKTOPS ---
+            - name: Configuration des tâches de maintenance pour les desktops Ubuntu
+              when: "'ubuntu_desktops' in group_names"
+              block:
+                - name: "(ubuntu_desktops) Systemd : Création du service"
+                  ansible.builtin.copy:
+                    dest: /etc/systemd/system/check-updates.service
+                    owner: root
+                    group: root
+                    mode: '0644'
+                    content: |
+                      [Unit]
+                      Description=Vérification des mises à jour (Mode Desktop)
+                      [Service]
+                      Type=oneshot
+                      ExecStart=/root/scripts/check-updates.sh
+
+                - name: "(ubuntu_desktops) Systemd : Création du timer (10min boot + hebdomadaire)"
+                  ansible.builtin.copy:
+                    dest: /etc/systemd/system/check-updates.timer
+                    owner: root
+                    group: root
+                    mode: '0644'
+                    content: |
+                      [Unit]
+                      Description=Lance le script 10min après boot et 1x par semaine
+                      [Timer]
+                      OnBootSec=10min
+                      OnUnitActiveSec=1w
+                      Persistent=true
+                      [Install]
+                      WantedBy=timers.target
+                  register: timer_config
+
+                - name: "(ubuntu_desktops) Systemd : Activation et démarrage du timer"
+                  ansible.builtin.systemd_service:
+                    name: check-updates.timer
+                    state: started
+                    enabled: true
+                    daemon_reload: "{{ timer_config.changed }}"
+                  check_mode: false
