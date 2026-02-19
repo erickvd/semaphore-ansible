@@ -1,25 +1,78 @@
 #!/bin/bash
-SCRIPTDIR=$(dirname $0)
 
-if [ ! -f ${SCRIPTDIR}/.env ]; then
-    echo "Pas de fichier .env."
-    echo "Impossible de charger les variables d'environnement."
-    echo ""
-    exit 1
+# Définition du répertoire du script de manière robuste
+SCRIPTDIR=$(dirname "$(readlink -f "$0")")
+
+# Chargement des variables d'environnement (.env)
+if [ -f "${SCRIPTDIR}/.env" ]; then
+    source "${SCRIPTDIR}/.env"
 else
-    source ${SCRIPTDIR}/.env
+    echo "Erreur : Fichier ${SCRIPTDIR}/.env introuvable."
+    exit 1
 fi
 
-# Mise à jour de la liste des paquets (nécessite sudo)
+# Vérification de la présence de WEBHOOK_URL
+if [ -z "$WEBHOOK_URL" ]; then
+    echo "Erreur : WEBHOOK_URL n'est pas défini dans le fichier .env"
+    exit 1
+fi
+
+# Mise à jour silencieuse de la liste des paquets
 sudo apt update > /dev/null 2>&1
 
-# Vérification des mises à jour disponibles
-updates=$(apt list --upgradable 2>/dev/null | grep -v "Listing...")
+# Récupération des mises à jour (on filtre pour n'avoir que les lignes de paquets)
+raw_updates=$(apt list --upgradable 2>/dev/null | grep "/")
+count=$(echo "$raw_updates" | grep -c "^" | xargs) # xargs retire les espaces superflus
 
-if [ -n "$updates" ]; then
-    # Formatage du message pour Discord
-    message="📦 **Mises à jour Ubuntu disponibles**\n\`\`\`$updates\`\`\`"
+# Détermination de la couleur et du statut
+# Vert : 3066993 | Orange/Jaune : 16753920 | Rouge : 15158332
+if [ "$count" -eq 0 ]; then
+    color=3066993
+    status_msg="✅ Système à jour sur $(hostname)"
+    updates_list="Aucun paquet à mettre à jour."
+else
+    [ "$count" -lt 15 ] && color=16753920 || color=15158332
+    status_msg="📦 $count mise(s) à jour Ubuntu disponibles sur $(hostname)"
 
-    # Envoi via curl
-    curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"$message\"}" $WEBHOOK_URL
+    # Formatage de la liste avec printf pour simuler des colonnes
+    # On limite à 30 paquets pour ne pas exploser la limite de caractères de Discord
+    updates_list=$(echo "$raw_updates" | head -n 30 | awk -F'[/ ]' '{
+        name=$1;
+        new_ver=$3;
+        old_ver=$(NF);
+        gsub(/[\[\]]/, "", old_ver);
+        printf "%-20s -> %-20s\n", name, new_ver
+    }')
+
+    if [ "$count" -gt 30 ]; then
+        updates_list+=$'\n... (liste tronquée pour des raisons de lisibilité)'
+    fi
 fi
+
+# Construction du JSON avec jq
+# On utilise --argjson pour la couleur afin qu'elle soit traitée comme un nombre
+payload=$(jq -n \
+    --arg title "$status_msg" \
+    --arg list "$updates_list" \
+    --argjson clr "$color" \
+    '{
+        embeds: [{
+            title: $title,
+            color: $clr,
+            fields: [
+                {
+                    name: "Détails des paquets",
+                    value: ("```text\n" + $list + "\n```" | .[0:1024]),
+                    inline: false
+                }
+            ]
+        }]
+    }')
+
+# Envoi au Webhook Discord
+curl -s -H "Content-Type: application/json" \
+     -X POST \
+     -d "$payload" \
+     "$WEBHOOK_URL" > /dev/null
+
+exit 0
