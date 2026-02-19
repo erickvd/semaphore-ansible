@@ -64,7 +64,7 @@
                   Description=Vérification des mises à jour (Mode Desktop)
                   [Service]
                   Type=oneshot
-                  ExecStart=/root/scripts/check-updates.s
+                  ExecStart=/root/scripts/check-updates.sh
             - name: "(ubuntu_desktops) Systemd : Création du timer (10min boot + hebdomadaire)"
               ansible.builtin.copy:
                 dest: /etc/systemd/system/check-updates.timer
