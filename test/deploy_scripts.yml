@@ -25,10 +25,7 @@
     - name: Configuration des taches de maintenance pour les serveurs Ubuntu
       when: "'ubuntu_servers' in group_names"
       block:
-        - name: 'Information'
-          ansible.builtin.debug:
-            msg: "Cible: ubuntu_servers"
-        - name: "Cron : Check updates chaque samedi à 10h"
+        - name: "(ubuntu_servers) Cron : Check updates chaque samedi à 10h"
           ansible.builtin.cron:
             name: "Check updates weekly"
             minute: "0"
@@ -41,10 +38,7 @@
     - name: Configuration des tâches de maintenance pour les desktops Ubuntu
       when: "'ubuntu_desktops' in group_names"
       block:
-        - name: 'Information'
-          ansible.builtin.debug:
-            msg: "Cible: ubuntu_desktops"
-        - name: "Systemd : Création du service"
+        - name: "(ubuntu_desktops) Systemd : Création du service"
           ansible.builtin.copy:
             dest: /etc/systemd/system/check-updates.service
             owner: root
@@ -57,7 +51,7 @@
               Type=oneshot
               ExecStart=/root/scripts/check-updates.sh
 
-        - name: "Systemd : Création du timer (10min boot + hebdomadaire)"
+        - name: "(ubuntu_desktops) Systemd : Création du timer (10min boot + hebdomadaire)"
           ansible.builtin.copy:
             dest: /etc/systemd/system/check-updates.timer
             owner: root
@@ -74,7 +68,7 @@
               WantedBy=timers.target
           register: timer_config
 
-        - name: "Systemd : Activation et démarrage du timer"
+        - name: "(ubuntu_desktops) Systemd : Activation et démarrage du timer"
           ansible.builtin.systemd:
             name: check-updates.timer
             state: started
