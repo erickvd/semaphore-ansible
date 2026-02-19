@@ -49,44 +49,42 @@
                 user: root
                 job: "/root/scripts/check-updates.sh"
 
-            # --- CONFIGURATION DESKTOPS ---
-            - name: Configuration des tâches de maintenance pour les desktops Ubuntu
-              when: "'ubuntu_desktops' in group_names"
-              block:
-                - name: "(ubuntu_desktops) Systemd : Création du service"
-                  ansible.builtin.copy:
-                    dest: /etc/systemd/system/check-updates.service
-                    owner: root
-                    group: root
-                    mode: '0644'
-                    content: |
-                      [Unit]
-                      Description=Vérification des mises à jour (Mode Desktop)
-                      [Service]
-                      Type=oneshot
-                      ExecStart=/root/scripts/check-updates.sh
-
-                - name: "(ubuntu_desktops) Systemd : Création du timer (10min boot + hebdomadaire)"
-                  ansible.builtin.copy:
-                    dest: /etc/systemd/system/check-updates.timer
-                    owner: root
-                    group: root
-                    mode: '0644'
-                    content: |
-                      [Unit]
-                      Description=Lance le script 10min après boot et 1x par semaine
-                      [Timer]
-                      OnBootSec=10min
-                      OnUnitActiveSec=1w
-                      Persistent=true
-                      [Install]
-                      WantedBy=timers.target
-                  register: timer_config
-
-                - name: "(ubuntu_desktops) Systemd : Activation et démarrage du timer"
-                  ansible.builtin.systemd_service:
-                    name: check-updates.timer
-                    state: started
-                    enabled: true
-                    daemon_reload: "{{ timer_config.changed }}"
-                  check_mode: false
+        # --- CONFIGURATION DESKTOPS ---
+        - name: Configuration des tâches de maintenance pour les desktops Ubuntu
+          when: "'ubuntu_desktops' in group_names"
+          block:
+            - name: "(ubuntu_desktops) Systemd : Création du service"
+              ansible.builtin.copy:
+                dest: /etc/systemd/system/check-updates.service
+                owner: root
+                group: root
+                mode: '0644'
+                content: |
+                  [Unit]
+                  Description=Vérification des mises à jour (Mode Desktop)
+                  [Service]
+                  Type=oneshot
+                  ExecStart=/root/scripts/check-updates.s
+            - name: "(ubuntu_desktops) Systemd : Création du timer (10min boot + hebdomadaire)"
+              ansible.builtin.copy:
+                dest: /etc/systemd/system/check-updates.timer
+                owner: root
+                group: root
+                mode: '0644'
+                content: |
+                  [Unit]
+                  Description=Lance le script 10min après boot et 1x par semaine
+                  [Timer]
+                  OnBootSec=10min
+                  OnUnitActiveSec=1w
+                  Persistent=true
+                  [Install]
+                  WantedBy=timers.target
+              register: timer_confi
+            - name: "(ubuntu_desktops) Systemd : Activation et démarrage du timer"
+              ansible.builtin.systemd_service:
+                name: check-updates.timer
+                state: started
+                enabled: true
+                daemon_reload: "{{ timer_config.changed }}"
+              check_mode: false
