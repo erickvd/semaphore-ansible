@@ -86,5 +86,5 @@
                 name: check-updates.timer
                 state: started
                 enabled: true
-                daemon_reload: "{{ timer_config.changed }}"
+                daemon_reload: "{{ timer_config.changed | default(true) }}"
               check_mode: false
