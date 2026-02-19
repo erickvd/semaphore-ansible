@@ -20,3 +20,57 @@
         src: env.j2         # Ansible cherche tout seul dans le dossier /templates
         dest: /root/scripts/.env
         mode: '0600'
+
+    # --- CONFIGURATION SERVEURS ---
+    - name: Configuration des taches de maintenance pour les serveurs Ubuntu
+      when: "'ubuntu_servers' in group_names"
+      block:
+        - name: "Cron : Check updates chaque samedi à 10h"
+          ansible.builtin.cron:
+            name: "Check updates weekly"
+            minute: "0"
+            hour: "10"
+            weekday: "6"
+            user: root
+            job: "/root/scripts/check-updates.sh"
+
+    # --- CONFIGURATION DESKTOPS ---
+    - name: Configuration des tâches de maintenance pour les desktops Ubuntu
+      when: "'ubuntu_desktops' in group_names"
+      block:
+        - name: "Systemd : Création du service"
+          ansible.builtin.copy:
+            dest: /etc/systemd/system/check-updates.service
+            owner: root
+            group: root
+            mode: '0644'
+            content: |
+              [Unit]
+              Description=Vérification des mises à jour (Mode Desktop)
+              [Service]
+              Type=oneshot
+              ExecStart=/root/scripts/check-updates.sh
+
+        - name: "Systemd : Création du timer (10min boot + hebdomadaire)"
+          ansible.builtin.copy:
+            dest: /etc/systemd/system/check-updates.timer
+            owner: root
+            group: root
+            mode: '0644'
+            content: |
+              [Unit]
+              Description=Lance le script 10min après boot et 1x par semaine
+              [Timer]
+              OnBootSec=10min
+              OnUnitActiveSec=1w
+              Persistent=true
+              [Install]
+              WantedBy=timers.target
+          register: timer_config
+
+        - name: "Systemd : Activation et démarrage du timer"
+          ansible.builtin.systemd:
+            name: check-updates.timer
+            state: started
+            enabled: true
+            daemon_reload: "{{ timer_config.changed }}"
