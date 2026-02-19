@@ -80,7 +80,7 @@
                   Persistent=true
                   [Install]
                   WantedBy=timers.target
-              register: timer_confi
+              register: timer_config
             - name: "(ubuntu_desktops) Systemd : Activation et démarrage du timer"
               ansible.builtin.systemd_service:
                 name: check-updates.timer
