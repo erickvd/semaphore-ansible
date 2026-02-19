@@ -3,6 +3,8 @@
   hosts: "{{ HOSTS | default([]) }}"
   become: true
   tasks:
+    - name: Vérifier si les cibles sont UP
+      ansible.builtin.ping:
     - name: Ensure script directory exist
       ansible.builtin.file:
         path: /root/scripts
