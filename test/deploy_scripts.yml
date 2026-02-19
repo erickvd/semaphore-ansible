@@ -7,10 +7,16 @@
       ansible.builtin.file:
         path: /root/scripts
         state: directory
-        mode: '0755'
+        mode: '0700'
 
     - name: Copier les scripts de déploiement
       ansible.builtin.copy:
         src: "scripts_root/"
         dest: "/root/scripts/"
-        mode: '0755'
+        mode: '0700'
+
+    - name: Générer le fichier .env à partir du template
+      ansible.builtin.template:
+        src: env.j2         # Ansible cherche tout seul dans le dossier /templates
+        dest: /root/scripts/.env
+        mode: '0600'

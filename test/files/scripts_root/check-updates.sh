@@ -1,7 +1,14 @@
 #!/bin/bash
+SCRIPTDIR=$(dirname $0)
 
-# URL du Webhook Discord
-WEBHOOK_URL="https://discordapp.com/api/webhooks/1473180055969599529/XiIf4ZMZLqf1OYpLeF2r_SsS0DGXvCEsWpzEBay08OZw7G4R7bl0humPHPHzPCWmnYgm"
+if [ ! -f ${SCRIPTDIR}/.env ]; then
+    echo "Pas de fichier .env."
+    echo "Impossible de charger les variables d'environnement."
+    echo ""
+    exit 1
+else
+    source ${SCRIPTDIR}/.env
+fi
 
 # Mise à jour de la liste des paquets (nécessite sudo)
 sudo apt update > /dev/null 2>&1
@@ -16,4 +23,3 @@ if [ -n "$updates" ]; then
     # Envoi via curl
     curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"$message\"}" $WEBHOOK_URL
 fi
-
