@@ -65,7 +65,7 @@
                   [Service]
                   Type=oneshot
                   ExecStart=/root/scripts/check-updates.sh
-                notify: daemon_reload
+              notify: daemon_reload
             - name: "(ubuntu_desktops) Systemd : Création du timer (10min boot + hebdomadaire)"
               ansible.builtin.copy:
                 dest: /etc/systemd/system/check-updates.timer
@@ -81,7 +81,7 @@
                   Persistent=true
                   [Install]
                   WantedBy=timers.target
-                notify: daemon_reload
+              notify: daemon_reload
               register: timer_config
             - name: "(ubuntu_desktops) Systemd : Activation et démarrage du timer"
               ansible.builtin.systemd_service:
