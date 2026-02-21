@@ -40,12 +40,12 @@
         - name: "[Serveurs] Afficher les paquets mis à jour"
           vars:
             paquets: "{{ apt_result.stdout_lines | select('match', '^Inst ') | map('regex_replace', '^Inst (\\S+).*', '\\1') | list }}"
-            resume: "{{ apt_result.stdout_lines | select('match', '.*upgraded.*') | list | first | default('') }}"
+            resume: "{{ apt_result.stdout_lines | select('match', '^\\d+ upgraded') | list | first | default('') }}"
           ansible.builtin.debug:
-            msg: |
-              📦 Mise à jour sur {{ inventory_hostname }} :
-              Paquets : {{ paquets | join(', ') }}
-              Résumé  : {{ resume }}
+            msg:
+              - "📦 Mise à jour sur {{ inventory_hostname }}"
+              - "Paquets : {{ paquets | join(', ') }}"
+              - "Résumé  : {{ resume }}"
           when: apt_result.changed
           # noqa: no-handler
 
@@ -76,11 +76,11 @@
         - name: "[Desktops] Afficher les paquets mis à jour"
           vars:
             paquets: "{{ apt_result.stdout_lines | select('match', '^Inst ') | map('regex_replace', '^Inst (\\S+).*', '\\1') | list }}"
-            resume: "{{ apt_result.stdout_lines | select('match', '.*upgraded.*') | list | first | default('') }}"
+            resume: "{{ apt_result.stdout_lines | select('match', '^\\d+ upgraded') | list | first | default('') }}"
           ansible.builtin.debug:
-            msg: |
-              📦 Mise à jour sur {{ inventory_hostname }} :
-              Paquets : {{ paquets | join(', ') }}
-              Résumé  : {{ resume }}
+            msg:
+              - "📦 Mise à jour sur {{ inventory_hostname }}"
+              - "Paquets : {{ paquets | join(', ') }}"
+              - "Résumé  : {{ resume }}"
           when: apt_result.changed
           # noqa: no-handler
