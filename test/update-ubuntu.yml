@@ -1,0 +1,74 @@
+---
+# playbook_update_ubuntu.yml
+
+- name: Mise à jour des machines Ubuntu
+  hosts: ubuntu_servers:ubuntu_desktops
+  become: true
+
+  tasks:
+
+    # ── Tâches communes aux deux groupes ──────────────────────────────────────
+    - name: Mise à jour du cache apt
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Mise à jour de tous les paquets
+      ansible.builtin.apt:
+        upgrade: dist
+        autoremove: true
+        autoclean: true
+      register: apt_result
+
+    - name: Vérification si un reboot est nécessaire
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: reboot_required
+
+    # ── Bloc spécifique aux serveurs ──────────────────────────────────────────
+    - name: Tâches spécifiques aux serveurs
+      when: "'ubuntu_servers' in group_names"
+      block:
+
+        - name: "[Serveurs] Afficher un avertissement si un reboot est nécessaire"
+          ansible.builtin.debug:
+            msg: >
+              ⚠️  REBOOT REQUIS sur {{ inventory_hostname }} !
+              Veuillez redémarrer manuellement dès que possible.
+          when: reboot_required.stat.exists
+
+        - name: "[Serveurs] Afficher les paquets mis à jour"
+          ansible.builtin.debug:
+            msg: "Paquets mis à jour : {{ apt_result.stdout_lines | default([]) }}"
+          when: apt_result.changed
+          # noqa: no-handler
+
+    # ── Bloc spécifique aux desktops ──────────────────────────────────────────
+    - name: Tâches spécifiques aux desktops
+      when: "'ubuntu_desktops' in group_names"
+      block:
+
+        - name: "[Desktops] Mise à jour des snaps (si snapd est installé)"
+          community.general.snap:
+            name: "*"
+            state: present
+          when: ansible_facts.packages['snapd'] is defined
+
+        - name: "[Desktops] Lire les paquets nécessitant un reboot"
+          ansible.builtin.slurp:
+            src: /var/run/reboot-required.pkgs
+          register: reboot_pkgs
+          when: reboot_required.stat.exists
+
+        - name: "[Desktops] Afficher un avertissement si un reboot est nécessaire"
+          ansible.builtin.debug:
+            msg: >
+              ⚠️  REBOOT REQUIS sur {{ inventory_hostname }} !
+              Paquets concernés : {{ reboot_pkgs.stdout_lines | default(['inconnu']) }}
+          when: reboot_required.stat.exists
+
+        - name: "[Desktops] Afficher les paquets mis à jour"
+          ansible.builtin.debug:
+            msg: "Paquets mis à jour : {{ apt_result.stdout_lines | default([]) }}"
+          when: apt_result.changed
+          # noqa: no-handler
