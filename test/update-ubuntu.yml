@@ -2,7 +2,7 @@
 # playbook_update_ubuntu.yml
 
 - name: Mise à jour des machines Ubuntu
-  hosts: ubuntu_servers:ubuntu_desktops
+  hosts: "{{ HOSTS | default([]) }}"
   become: true
 
   tasks:
