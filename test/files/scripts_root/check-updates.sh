@@ -21,7 +21,8 @@ fi
 sudo apt update > /dev/null 2>&1
 
 # Récupération des mises à jour (on filtre pour n'avoir que les lignes de paquets)
-raw_updates=$(apt list --upgradable 2>/dev/null | grep "/")
+# raw_updates=$(apt list --upgradable 2>/dev/null | grep "/")
+raw_updates=$(apt upgrade --simulate 2>/dev/null | grep -e '^Inst')
 count=$(echo "$raw_updates" | grep -c "^" | xargs) # xargs retire les espaces superflus
 
 # Détermination de la couleur et du statut
@@ -36,12 +37,13 @@ else
 
     # Formatage de la liste avec printf pour simuler des colonnes
     # On limite à 30 paquets pour ne pas exploser la limite de caractères de Discord
-    updates_list=$(echo "$raw_updates" | head -n 30 | awk -F'[/ ]' '{
-        name=$1;
-        new_ver=$3;
-        old_ver=$(NF);
-        gsub(/[\[\]]/, "", old_ver);
-        printf "%-20s -> %-20s\n", name, new_ver
+    updates_list=$(apt upgrade --simulate 2>/dev/null | grep '^Inst' | head -n 30 | awk '{
+        name=$2;
+        old_ver=$3;
+        new_ver=$4;
+        gsub(/[\[\]()]/, "", old_ver);
+        gsub(/[\[\]()]/, "", new_ver);
+        printf "%-30s %s -> %s\n", name, old_ver, new_ver
     }')
 
     if [ "$count" -gt 30 ]; then
