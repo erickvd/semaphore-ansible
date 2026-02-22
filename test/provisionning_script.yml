@@ -7,10 +7,6 @@
     scripts_dir: /var/www/html/scripts
 
   tasks:
-    - name: Test vault
-      ansible.builtin.debug:
-        msg: "{{ semaphore_pwd }}"
-
     - name: Ensure scripts directory exists
       ansible.builtin.file:
         path: "{{ scripts_dir }}"
