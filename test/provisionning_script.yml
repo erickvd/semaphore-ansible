@@ -23,6 +23,6 @@
       ansible.builtin.copy:
         dest: "{{ scripts_dir }}/.env"
         mode: "0644"
-        content: |
-          SEMAPHORE_PWD="{{ semaphore_pwd }}""
-          SEM_SSH_KEY="{{ sem_ssh_key }}""
+        content: |-
+          SEMAPHORE_PWD="{{ semaphore_pwd }}"
+          SEM_SSH_KEY="{{ sem_ssh_key }}"
