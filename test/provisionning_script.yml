@@ -1,6 +1,6 @@
 ---
 - name: Provisioning playbook
-  hosts: ansible
+  hosts: ansible.lan.ekla-danse.be
   become: true
 
   vars:
