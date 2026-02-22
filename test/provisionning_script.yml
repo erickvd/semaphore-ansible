@@ -1,0 +1,28 @@
+---
+- name: Provisioning playbook
+  hosts: ansible
+  become: true
+
+  vars:
+    scripts_dir: /var/www/html/scripts
+
+  tasks:
+    - name: Ensure scripts directory exists
+      ansible.builtin.file:
+        path: "{{ scripts_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Download prov.sh from GitHub
+      ansible.builtin.get_url:
+        url: "https://raw.githubusercontent.com/erickvd/scripts/main/prov.sh"
+        dest: "{{ scripts_dir }}/prov.sh"
+        mode: "0755"
+
+    - name: Create env file with Semaphore vault variables
+      ansible.builtin.copy:
+        dest: "{{ scripts_dir }}/.env"
+        mode: "0600"
+        content: |
+          SEMAPHORE_PWD={{ semaphore_pwd }}
+          SEM_SSH_KEY={{ sem_ssh_key }}
