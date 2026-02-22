@@ -28,5 +28,5 @@
         dest: "{{ scripts_dir }}/.env"
         mode: "0600"
         content: |
-          SEMAPHORE_PWD={{ semaphore_pwd }}
-          SEM_SSH_KEY={{ sem_ssh_key }}
+          SEMAPHORE_PWD="{{ semaphore_pwd }}""
+          SEM_SSH_KEY="{{ sem_ssh_key }}""
