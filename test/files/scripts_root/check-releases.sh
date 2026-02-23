@@ -32,7 +32,7 @@ then CHECK_EOS=1;
 else CHECK_EOS=0; fi
 
 if (! [ -e /root/last-dist-notified ] ); then
-    touch /root/last-dist-notified;
+    grep VERSION_ID /etc/os-release | awk -F '"' '{print $2}' > /root/last-dist-notified;
 fi
 
 if (! grep ${CHECK_RELEASE} /root/last-dist-notified &>/dev/null ); then
