@@ -31,11 +31,11 @@ if ( LANG=en /usr/lib/ubuntu-release-upgrader/check-new-release 2>&1 | grep "not
 then CHECK_EOS=1;
 else CHECK_EOS=0; fi
 
-if (! [ -e /root/last-dist-notified ] ); then
-    touch /root/last-dist-notified;
+if ( ! [[ -f /root/last-dist-notified ]] ); then
+    grep VERSION_ID /etc/os-release | awk -F '"' '{print $2}' > /root/last-dist-notified;
 fi
 
-if (! grep ${CHECK_RELEASE} /root/last-dist-notified &>/dev/null ); then
+if [[ -n "${CHECK_RELEASE}" ]] && ! grep -q "${CHECK_RELEASE}" /root/last-dist-notified ; then
     # Notification Discord
     title="Nouvelle Release détectée: ${CHECK_RELEASE}"
     if [[ ${CHECK_EOS} -eq 1 ]];
