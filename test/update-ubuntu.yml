@@ -17,6 +17,11 @@
         mode: "0644"
       when: "'ubuntu_desktops' in group_names"
 
+    - name: "[Desktops] Recharger systemd-logind"
+      ansible.builtin.systemd_service:
+        name: systemd-logind
+        state: restarted
+
     # ── Tâches communes aux deux groupes ──────────────────────────────────────
     - name: Mise à jour du cache apt
       ansible.builtin.apt:
@@ -96,6 +101,14 @@
               - "Résumé  : {{ resume }}"
           when: apt_result.changed
           # noqa: no-handler
+
+        - name: "[Desktops] Réactiver la mise en veille"
+          community.general.ini_file:
+            path: /etc/systemd/sleep.conf
+            section: Sleep
+            option: AllowSuspend
+            value: "yes"
+            mode: "0644"
 
         - name: "[Desktops] Recharger systemd-logind"
           ansible.builtin.systemd_service:
