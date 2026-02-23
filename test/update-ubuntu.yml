@@ -6,7 +6,6 @@
   become: true
 
   tasks:
-
     # ── Tâches communes aux deux groupes ──────────────────────────────────────
     - name: Mise à jour du cache apt
       ansible.builtin.apt:
