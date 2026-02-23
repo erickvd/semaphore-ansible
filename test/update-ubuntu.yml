@@ -55,6 +55,13 @@
     - name: Tâches spécifiques aux desktops
       when: "'ubuntu_desktops' in group_names"
       block:
+        - name: "[Desktops] Désactiver la mise en veille"
+          community.general.ini_file:
+            path: /etc/systemd/sleep.conf
+            section: Sleep
+            option: AllowSuspend
+            value: "no"
+            mode: "0644"
 
         - name: "[Desktops] Mise à jour des snaps (si snapd est installé)"
           community.general.snap:
@@ -86,3 +93,8 @@
               - "Résumé  : {{ resume }}"
           when: apt_result.changed
           # noqa: no-handler
+
+        - name: "[Desktops] Recharger systemd-logind"
+          ansible.builtin.systemd_service:
+            name: systemd-logind
+            state: restarted
