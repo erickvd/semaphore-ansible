@@ -92,7 +92,6 @@
                   [Install]
                   WantedBy=timers.target
               notify: "daemon_reload"
-              register: timer_config
 
             - name: "(ubuntu_desktops) Systemd : Activation et démarrage du timer"
               ansible.builtin.systemd_service:
@@ -131,7 +130,6 @@
                   [Install]
                   WantedBy=timers.target
               notify: "daemon_reload"
-              register: timer_config
 
             - name: "(ubuntu_desktops) Systemd : Activation et démarrage du timer"
               ansible.builtin.systemd_service:
