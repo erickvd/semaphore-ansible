@@ -50,12 +50,13 @@ else
         updates_list+=$'\n... (liste tronquée pour des raisons de lisibilité)'
     fi
 fi
+formatted_list=$(printf '```text\n%s\n```' "$updates_list")
 
 # Construction du JSON avec jq
 # On utilise --argjson pour la couleur afin qu'elle soit traitée comme un nombre
 payload=$(jq -n \
     --arg title "$status_msg" \
-    --arg list "$updates_list" \
+    --arg list "$formatted_list" \
     --argjson clr "$color" \
     '{
         embeds: [{
@@ -64,7 +65,7 @@ payload=$(jq -n \
             fields: [
                 {
                     name: "Détails des paquets",
-                    value: ("```text\n" + $list + "\n```" | .[0:1024]),
+                    value: ($list | .[0:1024]),
                     inline: false
                 }
             ]
