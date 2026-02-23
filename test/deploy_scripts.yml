@@ -49,11 +49,20 @@
                 user: root
                 job: "/root/scripts/check-updates.sh"
 
+            - name: "(ubuntu_servers) Cron : Check updates chaque samedi à 11h"
+              ansible.builtin.cron:
+                name: "Check release weekly"
+                minute: "0"
+                hour: "11"
+                weekday: "6"
+                user: root
+                job: "/root/scripts/check-releases.sh"
+
         # --- CONFIGURATION DESKTOPS ---
         - name: Configuration des tâches de maintenance pour les desktops Ubuntu
           when: "'ubuntu_desktops' in group_names"
           block:
-            - name: "(ubuntu_desktops) Systemd : Création du service"
+            - name: "(ubuntu_desktops) Systemd : Création du service updates"
               ansible.builtin.copy:
                 dest: /etc/systemd/system/check-updates.service
                 owner: root
@@ -66,6 +75,7 @@
                   Type=oneshot
                   ExecStart=/root/scripts/check-updates.sh
               notify: "daemon_reload"
+
             - name: "(ubuntu_desktops) Systemd : Création du timer (10min boot + hebdomadaire)"
               ansible.builtin.copy:
                 dest: /etc/systemd/system/check-updates.timer
@@ -83,9 +93,49 @@
                   WantedBy=timers.target
               notify: "daemon_reload"
               register: timer_config
+
             - name: "(ubuntu_desktops) Systemd : Activation et démarrage du timer"
               ansible.builtin.systemd_service:
                 name: check-updates.timer
+                state: started
+                enabled: true
+              check_mode: false
+
+            - name: "(ubuntu_desktops) Systemd : Création du service releases"
+              ansible.builtin.copy:
+                dest: /etc/systemd/system/check-releases.service
+                owner: root
+                group: root
+                mode: '0644'
+                content: |
+                  [Unit]
+                  Description=Vérification des releases (Mode Desktop)
+                  [Service]
+                  Type=oneshot
+                  ExecStart=/root/scripts/check-releases.sh
+              notify: "daemon_reload"
+
+            - name: "(ubuntu_desktops) Systemd : Création du timer releases (10min boot + hebdomadaire)"
+              ansible.builtin.copy:
+                dest: /etc/systemd/system/check-releases.timer
+                owner: root
+                group: root
+                mode: '0644'
+                content: |
+                  [Unit]
+                  Description=Lance le script 10min après boot et 1x par semaine
+                  [Timer]
+                  OnBootSec=10min
+                  OnUnitActiveSec=1w
+                  Persistent=true
+                  [Install]
+                  WantedBy=timers.target
+              notify: "daemon_reload"
+              register: timer_config
+
+            - name: "(ubuntu_desktops) Systemd : Activation et démarrage du timer"
+              ansible.builtin.systemd_service:
+                name: check-releases.timer
                 state: started
                 enabled: true
               check_mode: false
