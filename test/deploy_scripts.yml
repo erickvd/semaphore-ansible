@@ -93,13 +93,6 @@
                   WantedBy=timers.target
               notify: "daemon_reload"
 
-            - name: "(ubuntu_desktops) Systemd : Activation et démarrage du timer"
-              ansible.builtin.systemd_service:
-                name: check-updates.timer
-                state: started
-                enabled: true
-              check_mode: false
-
             - name: "(ubuntu_desktops) Systemd : Création du service releases"
               ansible.builtin.copy:
                 dest: /etc/systemd/system/check-releases.service
@@ -131,6 +124,16 @@
                   WantedBy=timers.target
               notify: "daemon_reload"
 
+            - name: Forcer l'exécution du daemon-reload avant activation
+              ansible.builtin.meta: flush_handlers
+
+            - name: "(ubuntu_desktops) Systemd : Activation et démarrage du timer"
+              ansible.builtin.systemd_service:
+                name: check-updates.timer
+                state: started
+                enabled: true
+              check_mode: false
+              
             - name: "(ubuntu_desktops) Systemd : Activation et démarrage du timer"
               ansible.builtin.systemd_service:
                 name: check-releases.timer
