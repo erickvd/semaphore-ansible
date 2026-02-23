@@ -44,7 +44,7 @@ if [[ -n "${CHECK_RELEASE}" ]] && ! grep -q "${CHECK_RELEASE}" /root/last-dist-n
         color="16189962"
     else
         support="Support toujours disponible => Mise à jour conseillée."
-        color="1826317"
+        color="15905801"
     fi
     payload=$(jq -n \
         --arg title "$title" \
