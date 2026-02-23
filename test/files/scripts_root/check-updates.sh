@@ -23,7 +23,7 @@ sudo apt update > /dev/null 2>&1
 # Récupération des mises à jour (on filtre pour n'avoir que les lignes de paquets)
 # raw_updates=$(apt list --upgradable 2>/dev/null | grep "/")
 raw_updates=$(apt upgrade --simulate 2>/dev/null | grep -e '^Inst')
-count=$(echo "$raw_updates" | grep -c "^" | xargs) # xargs retire les espaces superflus
+count=$(echo "$raw_updates" | grep -c "^Inst")
 
 # Détermination de la couleur et du statut
 # Vert : 3066993 | Orange/Jaune : 16753920 | Rouge : 15158332
