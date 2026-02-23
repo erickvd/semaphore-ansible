@@ -1,8 +1,12 @@
 ---
-- name: Deploiement de scripts
+- name: "Deploiement de scripts"
   hosts: "{{ HOSTS | default([]) }}"
   become: true
   gather_facts: false
+  handlers:
+    - name: "Importation des handlers"
+      ansible.builtin.import_tasks: handlers/main.yml
+
   tasks:
     - name: Vérifier si les cibles sont UP
       ansible.builtin.ping:
@@ -74,7 +78,7 @@
                   [Service]
                   Type=oneshot
                   ExecStart=/root/scripts/check-updates.sh
-              notify: "daemon_reload"
+              notify: "Daemon_reload"
 
             - name: "(ubuntu_desktops) Systemd : Création du timer (10min boot + hebdomadaire)"
               ansible.builtin.copy:
@@ -91,15 +95,7 @@
                   Persistent=true
                   [Install]
                   WantedBy=timers.target
-              notify: "daemon_reload"
-              register: timer_config
-
-            - name: "(ubuntu_desktops) Systemd : Activation et démarrage du timer"
-              ansible.builtin.systemd_service:
-                name: check-updates.timer
-                state: started
-                enabled: true
-              check_mode: false
+              notify: "Daemon_reload"
 
             - name: "(ubuntu_desktops) Systemd : Création du service releases"
               ansible.builtin.copy:
@@ -113,7 +109,7 @@
                   [Service]
                   Type=oneshot
                   ExecStart=/root/scripts/check-releases.sh
-              notify: "daemon_reload"
+              notify: "Daemon_reload"
 
             - name: "(ubuntu_desktops) Systemd : Création du timer releases (10min boot + hebdomadaire)"
               ansible.builtin.copy:
@@ -130,8 +126,17 @@
                   Persistent=true
                   [Install]
                   WantedBy=timers.target
-              notify: "daemon_reload"
-              register: timer_config
+              notify: "Daemon_reload"
+
+            - name: Forcer l'exécution du daemon-reload avant activation
+              ansible.builtin.meta: flush_handlers
+
+            - name: "(ubuntu_desktops) Systemd : Activation et démarrage du timer"
+              ansible.builtin.systemd_service:
+                name: check-updates.timer
+                state: started
+                enabled: true
+              check_mode: false
 
             - name: "(ubuntu_desktops) Systemd : Activation et démarrage du timer"
               ansible.builtin.systemd_service:
