@@ -19,6 +19,8 @@
         autoremove: true
         autoclean: true
       register: apt_result
+      async: 1800
+      poll: 30
 
     - name: Vérification si un reboot est nécessaire
       ansible.builtin.stat:
