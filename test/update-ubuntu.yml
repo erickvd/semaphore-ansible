@@ -7,6 +7,16 @@
 
   tasks:
 
+    # -- Inihibition de la mise en veille pendant les mises à jour (pour éviter les interruptions) --
+    - name: "[Desktops] Désactiver la mise en veille"
+      community.general.ini_file:
+        path: /etc/systemd/sleep.conf
+        section: Sleep
+        option: AllowSuspend
+        value: "no"
+        mode: "0644"
+      when: "'ubuntu_desktops' in group_names"
+
     # ── Tâches communes aux deux groupes ──────────────────────────────────────
     - name: Mise à jour du cache apt
       ansible.builtin.apt:
@@ -55,13 +65,6 @@
     - name: Tâches spécifiques aux desktops
       when: "'ubuntu_desktops' in group_names"
       block:
-        - name: "[Desktops] Désactiver la mise en veille"
-          community.general.ini_file:
-            path: /etc/systemd/sleep.conf
-            section: Sleep
-            option: AllowSuspend
-            value: "no"
-            mode: "0644"
 
         - name: "[Desktops] Mise à jour des snaps (si snapd est installé)"
           community.general.snap:
