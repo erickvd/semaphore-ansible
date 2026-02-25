@@ -31,12 +31,12 @@
       when: "'ubuntu_servers' in group_names or 'proxmox_servers' in group_names"
       block:
 
-        - name: "[Serveurs] Afficher un avertissement si un reboot est nécessaire"
-          ansible.builtin.debug:
-            msg: >
-              ⚠️  REBOOT REQUIS sur {{ inventory_hostname }} !
-              Veuillez redémarrer manuellement dès que possible.
-          when: reboot_required.stat.exists
+#        - name: "[Serveurs] Afficher un avertissement si un reboot est nécessaire"
+#          ansible.builtin.debug:
+#            msg: >
+#              ⚠️  REBOOT REQUIS sur {{ inventory_hostname }} !
+#              Veuillez redémarrer manuellement dès que possible.
+#          when: reboot_required.stat.exists
 
         - name: "[Serveurs] Afficher les paquets mis à jour"
           vars:
@@ -67,13 +67,6 @@
           register: reboot_pkgs
           when: reboot_required.stat.exists
 
-        - name: "[Desktops] Afficher un avertissement si un reboot est nécessaire"
-          ansible.builtin.debug:
-            msg: >
-              ⚠️  REBOOT REQUIS sur {{ inventory_hostname }} !
-              Paquets concernés : {{ reboot_pkgs.stdout_lines | default(['inconnu']) }}
-          when: reboot_required.stat.exists
-
         - name: "[Desktops] Afficher les paquets mis à jour"
           vars:
             paquets: "{{ apt_result.stdout_lines | select('match', '^Inst ') | map('regex_replace', '^Inst (\\S+).*', '\\1') | list }}"
@@ -85,3 +78,10 @@
               - "Résumé  : {{ resume }}"
           when: apt_result.changed
           # noqa: no-handler
+
+    - name: "Afficher un avertissement si un reboot est nécessaire"
+      ansible.builtin.debug:
+        msg: >
+          ⚠️  REBOOT REQUIS sur {{ inventory_hostname }} !
+          Paquets concernés : {{ reboot_pkgs.stdout_lines | default(['inconnu']) }}
+      when: reboot_required.stat.exists
