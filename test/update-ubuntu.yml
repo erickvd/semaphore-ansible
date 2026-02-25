@@ -28,7 +28,7 @@
 
     # ── Bloc spécifique aux serveurs ──────────────────────────────────────────
     - name: Tâches spécifiques aux serveurs
-      when: "'ubuntu_servers' in group_names"
+      when: "'ubuntu_servers' in group_names or 'proxmox_servers' in group_names"
       block:
 
         - name: "[Serveurs] Afficher un avertissement si un reboot est nécessaire"
