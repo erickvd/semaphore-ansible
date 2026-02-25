@@ -28,6 +28,11 @@
             state: directory
             mode: '0700'
 
+        - name: Installation de curl
+          ansible.builtin.package:
+            name: curl
+            state: present
+
         - name: Copier les scripts de déploiement
           ansible.builtin.copy:
             src: "scripts_root/"
