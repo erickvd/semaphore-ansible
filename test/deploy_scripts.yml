@@ -8,6 +8,10 @@
       ansible.builtin.import_tasks: handlers/main.yml
 
   tasks:
+    - name: Collecter les infos des paquets installés
+      ansible.builtin.package_facts:
+        manager: auto
+
     - name: Vérifier si les cibles sont UP
       ansible.builtin.ping:
       ignore_unreachable: true
@@ -149,3 +153,115 @@
                 state: started
                 enabled: true
               check_mode: false
+
+            - name: "(RSYSLOGD) Activation module imjournal"
+              ansible.builtin.lineinfile:
+                path: /etc/rsyslog.conf
+                line: "module(load=\"imjournal\")"
+                insertafter: '^module\\(load="imuxsock"\\)'
+              notify: "Restart rsyslog"
+
+            - name: "(JOURNALD) Création du dossier journal.conf.d"
+              ansible.builtin.file:
+                path: /etc/systemd/journald.conf.d
+                owner: root
+                group: root
+                mode: '0755'
+                state: directory
+
+            - name: "(JOURNALD) Configuration RateLimit"
+              ansible.builtin.copy:
+                dest: /etc/systemd/journald.conf.d/ratelimit.conf
+                owner: root
+                group: root
+                mode: '0644'
+                content: |
+                  [Journal]
+                  RateLimitIntervalSec=10s
+                  RateLimitBurst=100
+                  SystemMaxUse=500M
+              notify: "Restart systemd-journald"
+
+            - name: "Suppression delaycompress dans logrotate"
+              ansible.builtin.replace:
+                path: "{{ item }}"
+                regexp: '^\s*delaycompress\s*$'
+                replace: ''
+              with_fileglob:
+                - /etc/logrotate.d/*
+
+            - name: "Configurer les logs pour 1Password"
+              when: "'1password' in ansible_facts.packages"
+              ansible.builtin.copy:
+                dest: /etc/rsyslog.d/10-drop-1password.conf
+                owner: root
+                group: root
+                mode: '0644'
+                content: |
+                  if ( $programname startswith "1password") and ($syslogseverity >=6) then stop
+                  if $syslogfacility-text == "kern" and $msg contains "snap.1password" then stop
+              notify: "Restart rsyslog"
+
+            - name: "Discord ?"
+              ansible.builtin.command: snap list discord
+              failed_when: false
+              changed_when: false
+              register: discord_check
+
+            - name: "Configurer les logs pour Discord"
+              when: discord_check.rc == 0
+              ansible.builtin.copy:
+                dest: /etc/rsyslog.d/11-drop-discord.conf
+                owner: root
+                group: root
+                mode: '0644'
+                content: |
+                  if $programname startswith "discord" then stop
+                  if $programname startswith "Discord" then stop
+                  if $msg contains "apparmor=\"DENIED\"" and $msg contains "snap.discord" then stop
+                  if $syslogfacility-text == "kern" and $msg contains "snap.discord" then stop
+              notify: "Restart rsyslog"
+
+            - name: "Discord - Vérification system-observe"
+              ansible.builtin.command: snap connections discord
+              register: discord_connections
+              failed_when: false
+              changed_when: false
+              when: discord_check.rc == 0
+
+            - name: "Brave ?"
+              ansible.builtin.command: snap list brave
+              failed_when: false
+              changed_when: false
+              register: brave_check
+
+            - name: "Configurer les logs pour Brave"
+              when: brave_check.rc == 0
+              ansible.builtin.copy:
+                dest: /etc/rsyslog.d/12-drop-brave.conf
+                owner: root
+                group: root
+                mode: '0644'
+                content: |
+                  if $programname startswith "brave" then stop
+                  if $programname startswith "Brave" then stop
+                  if $msg contains "apparmor=\"DENIED\"" and $msg contains "snap.brave" then stop
+                  if $syslogfacility-text == "kern" and $msg contains "snap.brave" then stop
+              notify: "Restart rsyslog"
+
+            - name: "Pas de DING dans les logs"
+              ansible.builtin.copy:
+                dest: /etc/rsyslog.d/13-ding.conf
+                owner: root
+                group: root
+                mode: '0644'
+                content: |
+                  if $msg contains "DING:" then stop
+              notify: "Restart rsyslog"
+
+            - name: "Discord - Information system-observe"
+              ansible.builtin.debug:
+                msg: "system-observe n'est pas accordé à Discord. Vous pouvez l'activer avec: snap connect discord:system-observe"
+              when:
+                - discord_check.rc == 0
+                - "'system-observe' not in discord_connections.stdout"

@@ -2,3 +2,13 @@
 - name: "Daemon_reload"
   ansible.builtin.systemd_service:
     daemon_reload: true
+
+- name: "Restart rsyslog"
+  ansible.builtin.systemd_service:
+    name: rsyslog
+    state: restarted
+
+- name: "Restart systemd-journald"
+  ansible.builtin.systemd_service:
+    name: systemd-journald
+    state: restarted
