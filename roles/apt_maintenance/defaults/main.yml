@@ -1,6 +1,6 @@
 # Comportement général
-apt_check_only: false       # true = simulation (check-updates.yml)
-apt_skip_upgrade: false     # true = pas de mise à jour (reboot-ubuntu-servers.yml)
+apt_check_only: false
+apt_skip_upgrade: false
 
 # Options apt
 apt_upgrade_type: dist
@@ -12,3 +12,10 @@ apt_cache_valid_time: 3600
 apt_reboot_timeout: 300
 apt_reboot_pre_delay: 10
 apt_reboot_post_delay: 30
+
+# Valeurs par défaut de sécurité
+apt_result:
+  stdout_lines: []
+  changed: false
+reboot_pkgs:
+  content: ""

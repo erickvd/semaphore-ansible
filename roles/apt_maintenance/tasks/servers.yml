@@ -37,4 +37,3 @@
       {% endif %}
   ansible.builtin.debug:
     msg: "{{ msg_reboot | trim }}"
-  when: apt_skip_upgrade  # utile quand appelé depuis reboot-ubuntu-servers.yml
