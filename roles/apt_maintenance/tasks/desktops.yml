@@ -1,0 +1,44 @@
+- name: Collecter les facts sur les paquets installés
+  ansible.builtin.package_facts:
+    manager: auto
+
+- name: Mise à jour des snaps
+  community.general.snap:
+    name: "*"
+    state: present
+  when:
+    - not apt_check_only
+    - ansible_facts.packages['snapd'] is defined
+
+- name: Afficher les paquets mis à jour
+  vars:
+    paquets: >-
+      {{ apt_result.stdout_lines
+         | select('match', '^Inst ')
+         | map('regex_replace', '^Inst (\\S+).*', '\\1')
+         | list }}
+    resume: >-
+      {{ apt_result.stdout_lines
+         | select('match', '^\\d+ upgraded')
+         | list | first | default('') }}
+  ansible.builtin.debug:
+    msg:
+      - "📦 Mise à jour sur {{ inventory_hostname }}"
+      - "Paquets : {{ paquets | join(', ') }}"
+      - "Résumé  : {{ resume }}"
+  when:
+    - not apt_check_only
+    - apt_result.changed
+
+- name: Lire les paquets nécessitant un reboot
+  ansible.builtin.slurp:
+    src: /var/run/reboot-required.pkgs
+  register: reboot_pkgs
+  when: reboot_required.stat.exists
+
+- name: Avertissement reboot manuel requis
+  ansible.builtin.debug:
+    msg:
+      - "⚠️  REBOOT MANUEL REQUIS sur {{ inventory_hostname }}"
+      - "Paquets concernés : {{ (reboot_pkgs.content | b64decode).split('\n') | reject('equalto', '') | list }}"
+  when: reboot_required.stat.exists

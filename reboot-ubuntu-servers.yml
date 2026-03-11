@@ -1,0 +1,7 @@
+- name: Reboot des serveurs Ubuntu si nécessaire
+  hosts: ubuntu_servers
+  become: true
+  roles:
+    - role: apt_maintenance
+      vars:
+        apt_skip_upgrade: true

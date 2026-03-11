@@ -1,0 +1,14 @@
+# Comportement général
+apt_check_only: false       # true = simulation (check-updates.yml)
+apt_skip_upgrade: false     # true = pas de mise à jour (reboot-ubuntu-servers.yml)
+
+# Options apt
+apt_upgrade_type: dist
+apt_autoremove: true
+apt_autoclean: true
+apt_cache_valid_time: 3600
+
+# Options reboot (serveurs)
+apt_reboot_timeout: 300
+apt_reboot_pre_delay: 10
+apt_reboot_post_delay: 30

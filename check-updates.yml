@@ -1,0 +1,7 @@
+- name: Vérification des mises à jour disponibles
+  hosts: "{{ HOSTS | default([]) }}"
+  become: true
+  roles:
+    - role: apt_maintenance
+      vars:
+        apt_check_only: true

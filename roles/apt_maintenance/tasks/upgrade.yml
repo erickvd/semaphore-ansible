@@ -1,0 +1,41 @@
+- name: Mise à jour du cache apt
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: "{{ apt_cache_valid_time }}"
+
+# En mode check_only, on liste les paquets sans appliquer
+- name: Vérification des mises à jour disponibles (check_only)
+  ansible.builtin.apt:
+    upgrade: safe
+  register: apt_result
+  check_mode: true
+  changed_when: false
+  when: apt_check_only
+
+- name: Liste des paquets disponibles (check_only)
+  ansible.builtin.shell: apt list --upgradable 2>/dev/null
+  register: upgradable_packages
+  changed_when: false
+  when: apt_check_only
+
+- name: Affichage des paquets disponibles (check_only)
+  ansible.builtin.debug:
+    msg: "{{ upgradable_packages.stdout_lines }}"
+  when:
+    - apt_check_only
+    - "'upgradable' in upgradable_packages.stdout"
+
+- name: Mise à jour de tous les paquets
+  ansible.builtin.apt:
+    upgrade: "{{ apt_upgrade_type }}"
+    autoremove: "{{ apt_autoremove }}"
+    autoclean: "{{ apt_autoclean }}"
+  register: apt_result
+  async: 1800
+  poll: 30
+  when: not apt_check_only
+
+- name: Vérification si un reboot est nécessaire
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+  register: reboot_required

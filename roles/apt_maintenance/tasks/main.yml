@@ -1,0 +1,11 @@
+- name: Mise à jour apt
+  ansible.builtin.include_tasks: upgrade.yml
+  when: not apt_skip_upgrade
+
+- name: Tâches spécifiques aux serveurs
+  ansible.builtin.include_tasks: servers.yml
+  when: "'ubuntu_servers' in group_names or 'proxmox_servers' in group_names"
+
+- name: Tâches spécifiques aux desktops
+  ansible.builtin.include_tasks: desktops.yml
+  when: "'ubuntu_desktops' in group_names"

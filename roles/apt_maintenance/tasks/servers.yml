@@ -1,0 +1,40 @@
+- name: Afficher les paquets mis à jour
+  vars:
+    paquets: >-
+      {{ apt_result.stdout_lines
+         | select('match', '^Inst ')
+         | map('regex_replace', '^Inst (\\S+).*', '\\1')
+         | list }}
+    resume: >-
+      {{ apt_result.stdout_lines
+         | select('match', '^\\d+ upgraded')
+         | list | first | default('') }}
+  ansible.builtin.debug:
+    msg:
+      - "📦 Mise à jour sur {{ inventory_hostname }}"
+      - "Paquets : {{ paquets | join(', ') }}"
+      - "Résumé  : {{ resume }}"
+  when:
+    - not apt_check_only
+    - apt_result.changed
+
+- name: Reboot automatique si nécessaire
+  ansible.builtin.reboot:
+    msg: "Reboot déclenché par Ansible"
+    reboot_timeout: "{{ apt_reboot_timeout }}"
+    pre_reboot_delay: "{{ apt_reboot_pre_delay }}"
+    post_reboot_delay: "{{ apt_reboot_post_delay }}"
+    test_command: uptime
+  when: reboot_required.stat.exists
+
+- name: Afficher le statut reboot
+  vars:
+    msg_reboot: >-
+      {% if reboot_required.stat.exists %}
+      ✅ Reboot effectué avec succès.
+      {% else %}
+      ℹ️  Aucun reboot nécessaire.
+      {% endif %}
+  ansible.builtin.debug:
+    msg: "{{ msg_reboot | trim }}"
+  when: apt_skip_upgrade  # utile quand appelé depuis reboot-ubuntu-servers.yml
