@@ -2,7 +2,7 @@
 # playbook_reboot.yml
 
 - name: Reboot des machines Ubuntu si nécessaire
-  hosts: ubuntu_servers
+  hosts: ubuntu_servers:proxmox_servers
   become: true
 
   tasks:
