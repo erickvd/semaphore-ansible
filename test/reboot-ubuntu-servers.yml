@@ -48,7 +48,7 @@
     - name: Programmer le reboot de Semaphore via at
       ansible.builtin.shell: |
         set -o pipefail
-        echo "shutdown -r now" | at now + 1 minute
+        nohup bash -c 'sleep 60 && shutdown -r now' &>/dev/null &
       args:
         executable: /bin/bash
       changed_when: false
