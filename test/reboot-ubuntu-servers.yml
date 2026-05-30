@@ -40,7 +40,7 @@
       when: inventory_hostname != 'ansible.lan.ekla-danse.be'
 
 - name: Reboot de Semaphore en dernier
-  hosts: "{{ 'ansible.lan.ekla-danse.be' if hostvars['ansible.lan.ekla-danse.be']['reboot_semaphore'] | default(false) else [] }}"
+  hosts: ansible.lan.ekla-danse.be
   become: true
 
   tasks:
@@ -52,8 +52,16 @@
       args:
         executable: /bin/bash
       changed_when: false
+      when: hostvars['ansible.lan.ekla-danse.be']['reboot_semaphore'] | default(false)
 
     - name: Afficher le statut
+      vars:
+        needed: >
+          {% if hostvars['ansible.lan.ekla-danse.be']['reboot_semaphore'] | default(false) %}
+          ✅ Reboot programmé dans 1 minute.
+          {% else %}
+          ℹ️  Aucun reboot nécessaire.
+          {% endif %}
       ansible.builtin.debug:
         msg:
-          - "✅ Reboot programmé dans 1 minute."
+          - "{{ needed | trim }}"
