@@ -1,8 +1,8 @@
 ---
 # playbook_reboot.yml
 
-- name: Reboot des machines Ubuntu si nécessaire
-  hosts: ubuntu_servers:proxmox_servers
+- name: Reboot des serveurs si nécessaire
+  hosts: '{{ HOSTS | default(["ubuntu_servers,proxmox_servers"]) }}'
   become: true
 
   tasks:
