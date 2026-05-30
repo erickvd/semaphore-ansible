@@ -1,8 +1,8 @@
 ---
 # playbook_reboot.yml
 
-- name: Reboot des serveurs si nécessaire
-  hosts: '{{ HOSTS | default(["ubuntu_servers,proxmox_servers"]) }}'
+- name: Reboot des serveurs si nécessaire (hors Semaphore)
+  hosts: '{{ HOSTS | default("ubuntu_servers,proxmox_servers") }}'
   become: true
 
   tasks:
@@ -19,7 +19,12 @@
         pre_reboot_delay: 10
         post_reboot_delay: 30
         test_command: uptime
-      when: reboot_required.stat.exists
+      when: reboot_required.stat.exists and inventory_hostname != 'ansible.lan.ekla-danse.be'
+
+    - name: Marquer Semaphore pour reboot
+      ansible.builtin.set_fact:
+        reboot_semaphore: true
+      when: reboot_required.stat.exists and inventory_hostname == 'ansible.lan.ekla-danse.be'
 
     - name: Afficher le statut
       vars:
@@ -32,3 +37,23 @@
       ansible.builtin.debug:
         msg:
           - "{{ needed | trim }}"
+      when: inventory_hostname != 'ansible.lan.ekla-danse.be'
+
+- name: Reboot de Semaphore en dernier
+  hosts: "{{ 'ansible.lan.ekla-danse.be' if hostvars['ansible.lan.ekla-danse.be']['reboot_semaphore'] | default(false) else [] }}"
+  become: true
+
+  tasks:
+
+    - name: Programmer le reboot de Semaphore via at
+      ansible.builtin.shell: |
+        set -o pipefail
+        echo "shutdown -r now" | at now + 1 minute
+      args:
+        executable: /bin/bash
+      changed_when: false
+
+    - name: Afficher le statut
+      ansible.builtin.debug:
+        msg:
+          - "✅ Reboot programmé dans 1 minute."
