@@ -62,10 +62,10 @@
           failed_when: false
 
         - name: "[Desktops] Mise à jour des snaps (si snap est installé)"
-          community.general.snap:
-            name: "*"
-            state: present
+          ansible.builtin.shell: snap refresh
           when: snap_check.rc == 0
+          async: 600
+          poll: 30
 
         - name: "[Desktops] Lire les paquets nécessitant un reboot"
           ansible.builtin.slurp:
