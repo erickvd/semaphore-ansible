@@ -55,11 +55,17 @@
       when: "'ubuntu_desktops' in group_names"
       block:
 
-        - name: "[Desktops] Mise à jour des snaps (si snapd est installé)"
+        - name: "[Desktops] Vérification si snap est installé"
+          ansible.builtin.command: which snap
+          register: snap_check
+          changed_when: false
+          failed_when: false
+
+        - name: "[Desktops] Mise à jour des snaps (si snap est installé)"
           community.general.snap:
             name: "*"
             state: present
-          when: ansible_facts.packages['snapd'] is defined
+          when: snap_check.rc == 0
 
         - name: "[Desktops] Lire les paquets nécessitant un reboot"
           ansible.builtin.slurp:
