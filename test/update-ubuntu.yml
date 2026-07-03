@@ -64,6 +64,8 @@
         - name: "[Desktops] Mise à jour des snaps (si snap est installé)"
           ansible.builtin.shell: snap refresh
           when: snap_check.rc == 0
+          register: snap_result
+          changed_when: "' updated' in snap_result.stdout"
           async: 600
           poll: 30
 
