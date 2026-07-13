@@ -49,6 +49,7 @@
               - "Résumé  : {{ resume }}"
           when: apt_result.changed
           # noqa: no-handler
+
     # -- Bloc pour pihole (serveur de blocage de pub) ──────────────────────────────────────────
     - name: Tâche spécifique à pihole
       when: "{inventory_hostname} == 'pihole-ssh.lan.ekla-danse.be'"
@@ -69,7 +70,7 @@
           failed_when: false
 
         - name: "[Desktops] Mise à jour des snaps (si snap est installé)"
-          ansible.builtin.shell: snap refresh
+          ansible.builtin.shell: snap refresh # noqa: command-instead-of-shell
           when: snap_check.rc == 0
           register: snap_result
           changed_when: "' updated' in snap_result.stdout"
