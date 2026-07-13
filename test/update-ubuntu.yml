@@ -52,7 +52,7 @@
 
     # -- Bloc pour pihole (serveur de blocage de pub) ──────────────────────────────────────────
     - name: Tâche spécifique à pihole
-      when: "{inventory_hostname} == 'pihole-ssh.lan.ekla-danse.be'"
+      when: "{{ inventory_hostname }} == 'pihole-ssh.lan.ekla-danse.be'"
       ansible.builtin.command:
         cmd: pihole -up
       register: pihole_update
